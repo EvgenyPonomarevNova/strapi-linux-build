@@ -1,4 +1,3 @@
-# .github/workflows/build.yml
 name: Build Strapi for Linux
 on: [push]
 
@@ -6,22 +5,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'          # кеширует ~/.npm
+          node-version-file: '.nvmrc'   # файл из п.4 ниже
 
-      - name: Clean previous installs
+      - name: Clean previous install
         run: |
-          rm -rf node_modules package-lock.json
+          rm -rf node_modules
           npm cache clean --force
 
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps   # флага --force НЕ надо
+      - name: Install dependencies (fresh)
+        run: npm install --legacy-peer-deps   # без флага --force!
 
-      - name: Build
+      - name: Build Strapi
         run: npm run build
 
       - name: Upload build
@@ -29,13 +29,12 @@ jobs:
         with:
           name: strapi-linux-build
           path: |
-            dist/
             build/
+            dist/
             .strapi/
-            package.json
-            package-lock.json
-            config/
             public/
             src/
-            database/
+            config/
+            package.json
+            package-lock.json   # новый lock-file появится после билда
             !node_modules/
