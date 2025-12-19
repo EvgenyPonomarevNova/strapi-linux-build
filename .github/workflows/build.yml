@@ -1,47 +1,41 @@
+# .github/workflows/build.yml
 name: Build Strapi for Linux
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version-file: '.nvmrc'
+          cache: 'npm'          # кеширует ~/.npm
 
-      - name: Clean everything
+      - name: Clean previous installs
         run: |
-          rm -rf node_modules
-          rm -f package-lock.json
+          rm -rf node_modules package-lock.json
           npm cache clean --force
 
-      - name: Install with forced resolutions
-        run: |
-          # Создаем временный package.json с resolutions
-          cat > package.temp.json << 'EOF'
-          {
-            "resolutions": {
-              "ajv": "8.12.0",
-              "ajv-draft-04": "3.0.0"
-            }
-          }
-          EOF
-          
-          # Объединяем с нашим package.json
-          jq -s '.[0] * .[1]' package.json package.temp.json > package.combined.json
-          mv package.combined.json package.json
-          
-          # Устанавливаем
-          npm install --legacy-peer-deps --force
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps   # флага --force НЕ надо
 
-      - name: Build Strapi
+      - name: Build
         run: npm run build
 
-      - name: Upload Linux build
+      - name: Upload build
         uses: actions/upload-artifact@v4
         with:
           name: strapi-linux-build
-          path: dist/
+          path: |
+            dist/
+            build/
+            .strapi/
+            package.json
+            package-lock.json
+            config/
+            public/
+            src/
+            database/
+            !node_modules/
