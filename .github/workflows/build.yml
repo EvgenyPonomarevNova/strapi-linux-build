@@ -12,19 +12,30 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Clean installation
+      - name: Clean everything
         run: |
           rm -rf node_modules
           rm -f package-lock.json
           npm cache clean --force
 
-      - name: Install ALL dependencies at once
-        run: npm install --legacy-peer-deps
-
-      - name: Verify critical dependencies
+      - name: Install with forced resolutions
         run: |
-          npm list react react-dom ajv @strapi/strapi
-          echo "Dependencies verified"
+          # Создаем временный package.json с resolutions
+          cat > package.temp.json << 'EOF'
+          {
+            "resolutions": {
+              "ajv": "8.12.0",
+              "ajv-draft-04": "3.0.0"
+            }
+          }
+          EOF
+          
+          # Объединяем с нашим package.json
+          jq -s '.[0] * .[1]' package.json package.temp.json > package.combined.json
+          mv package.combined.json package.json
+          
+          # Устанавливаем
+          npm install --legacy-peer-deps --force
 
       - name: Build Strapi
         run: npm run build
