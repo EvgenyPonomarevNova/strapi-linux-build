@@ -12,22 +12,32 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Clean old dependencies
+      - name: Clean previous installation
         run: |
           rm -rf node_modules
           rm -f package-lock.json
           npm cache clean --force
 
-      - name: Fix compatibility issues
+      - name: Create .npmrc with correct config
         run: |
-          npm config set ajv "npm:ajv@^8.12.0"
-          npm config set ajv-draft-04 "npm:ajv-draft-04@^4.0.0"
-          npm config set @swc:core "npm:@swc/core-linux-x64-gnu@1.5.7"
-          npm config set legacy-peer-deps true
-          npm config set optional false
+          cat > .npmrc << 'EOF'
+          engine-strict=true
+          legacy-peer-deps=true
+          save-exact=true
+          EOF
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Strapi core first
+        run: npm install @strapi/strapi@4.24.1 --no-optional --legacy-peer-deps
+
+      - name: Install other dependencies
+        run: npm install @strapi/plugin-users-permissions@4.24.1 @strapi/plugin-upload@4.24.1 --no-optional --legacy-peer-deps
+
+      - name: Apply ajv patch if needed
+        run: |
+          # Устанавливаем правильную версию ajv
+          npm install ajv@^8.12.0 ajv-draft-04@^4.0.0 --no-save
+          # Проверяем, что установилось
+          npm list ajv ajv-draft-04
 
       - name: Build Strapi
         run: npm run build
