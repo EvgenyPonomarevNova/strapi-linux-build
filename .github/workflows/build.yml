@@ -18,26 +18,32 @@ jobs:
           rm -f package-lock.json
           npm cache clean --force
 
-      - name: Create .npmrc with correct config
+      - name: Create .npmrc
         run: |
-          cat > .npmrc << 'EOF'
-          engine-strict=true
-          legacy-peer-deps=true
-          save-exact=true
-          EOF
+          echo "engine-strict=true" > .npmrc
+          echo "legacy-peer-deps=true" >> .npmrc
+          echo "save-exact=true" >> .npmrc
 
-      - name: Install Strapi core first
-        run: npm install @strapi/strapi@4.24.1 --no-optional --legacy-peer-deps
-
-      - name: Install other dependencies
-        run: npm install @strapi/plugin-users-permissions@4.24.1 @strapi/plugin-upload@4.24.1 --no-optional --legacy-peer-deps
-
-      - name: Apply ajv patch if needed
+      - name: Install Strapi core with correct ajv
         run: |
-          # Устанавливаем правильную версию ajv
-          npm install ajv@^8.12.0 ajv-draft-04@^4.0.0 --no-save
-          # Проверяем, что установилось
-          npm list ajv ajv-draft-04
+          npm install ajv@^8.12.0
+          npm install @strapi/strapi@4.24.1 --no-optional --legacy-peer-deps
+
+      - name: Install plugins
+        run: |
+          npm install @strapi/plugin-users-permissions@4.24.1 --no-optional --legacy-peer-deps
+          npm install @strapi/plugin-upload@4.24.1 --no-optional --legacy-peer-deps
+
+      - name: Apply ajv-draft-04 patch
+        run: |
+          # Проверяем, есть ли ajv-draft-04
+          if [ -d "node_modules/ajv-draft-04" ]; then
+            # Патчим файл
+            find node_modules/ajv-draft-04 -name "*.js" -type f -exec sed -i "s|require('ajv/dist/core')|require('ajv')|g" {} \; 2>/dev/null || true
+            echo "AJV patch applied successfully"
+          else
+            echo "ajv-draft-04 not found, skipping patch"
+          fi
 
       - name: Build Strapi
         run: npm run build
