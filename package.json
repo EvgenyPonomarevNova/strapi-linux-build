@@ -1,9 +1,7 @@
 {
   "name": "strapi-app",
   "private": true,
-  "engines": {
-    "node": ">=18.0.0 <=20.x.x"
-  },
+  "engines": { "node": ">=18.0.0 <=20.x.x" },
   "scripts": {
     "develop": "strapi develop",
     "start": "strapi start",
@@ -14,5 +12,9 @@
     "@strapi/plugin-users-permissions": "4.24.1",
     "@strapi/plugin-upload": "4.24.1",
     "@strapi/plugin-i18n": "4.24.1"
+  },
+  "overrides": {
+    "ajv": "6.12.6",
+    "ajv-draft-04": "1.0.0"
   }
 }
