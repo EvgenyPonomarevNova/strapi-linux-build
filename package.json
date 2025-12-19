@@ -1,6 +1,9 @@
 {
   "name": "strapi-app",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0 <=20.x.x"
+  },
   "scripts": {
     "develop": "strapi develop",
     "start": "strapi start",
